@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kerala Gainer Pro</title>
+<style>
+    :root {
+        --bg-color: #0f111a;
+        --card-bg: #1a1d29;
+        --text-main: #e0e6ed;
+        --accent: #00d4ff; /* Cyan Neon */
+        --accent-glow: 0 0 10px rgba(0, 212, 255, 0.5);
+        --border-radius: 12px;
+    }
+
+    body { 
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+        background-color: var(--bg-color); 
+        color: var(--text-main); 
+        padding: 15px; 
+        max-width: 600px; 
+        margin: 0 auto; 
+        padding-bottom: 100px; 
+    }
+
+    h1 { text-align: center; text-transform: uppercase; margin-bottom: 20px; font-size: 1.5em; letter-spacing: 1px; color: var(--accent); text-shadow: var(--accent-glow); }
+
+    /* ELECTRIC SCOREBOARD */
+    .electric-card {
+        background: linear-gradient(145deg, #1e2230, #161821);
+        border-radius: var(--border-radius);
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        border: 1px solid #333;
+        position: relative;
+        overflow: hidden;
+    }
+    .electric-card::before {
+        content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, var(--accent), #ff005e);
+        box-shadow: 0 0 10px var(--accent);
+    }
+
+    .stat-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px; }
+    .stat-val { font-size: 2.2em; font-weight: 800; color: white; line-height: 1; }
+    .stat-label { font-size: 0.8em; color: #888; text-transform: uppercase; }
+
+    .progress-bar { width: 100%; height: 8px; background: #333; border-radius: 4px; margin-top: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), #00ff88); transition: width 0.5s; box-shadow: 0 0 10px var(--accent); }
+
+    /* CARDS */
+    .card { background: var(--card-bg); padding: 15px; border-radius: var(--border-radius); margin-bottom: 15px; border: 1px solid #2a2f40; }
+    h3 { margin: 0 0 15px 0; font-size: 1em; color: var(--accent); text-transform: uppercase; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #2a2f40; padding-bottom: 8px; }
+
+    /* INPUTS */
+    label { display: block; font-size: 0.85em; color: #aaa; margin: 10px 0 5px 0; font-weight: 600; }
+    select, input { 
+        width: 100%; padding: 12px; background: #0f111a; border: 1px solid #333; 
+        color: white; border-radius: 8px; font-size: 16px; box-sizing: border-box; 
+    }
+    select:focus, input:focus { border-color: var(--accent); outline: none; }
+    
+    .row { display: flex; gap: 10px; align-items: center; }
+    .qty-input { width: 70px; text-align: center; font-weight: bold; }
+
+    /* COUNTERS */
+    .counter-box { 
+        display: flex; align-items: center; justify-content: space-between; 
+        background: #12141f; padding: 5px 10px; border-radius: 8px; border: 1px solid #333; margin-top: 5px; 
+    }
+    .c-btn { width: 30px; height: 30px; background: #2a2f40; border: none; color: white; border-radius: 50%; font-size: 18px; cursor: pointer; }
+    .c-val { font-weight: bold; width: 30px; text-align: center; }
+
+    /* WATER TRACKER */
+    .water-row { display: flex; justify-content: center; gap: 20px; align-items: center; margin-top: 10px; }
+    .water-disp { font-size: 1.5em; font-weight: bold; color: var(--accent); }
+
+    .date-picker { text-align: center; margin-bottom: 20px; }
+    input[type="date"] { width: auto; background: #1a1d29; border: 1px solid #333; color: white; }
+
+</style>
+</head>
+<body>
+
+    <h1>KERALA GAINER PRO</h1>
+    
+    <div class="date-picker">
+        <input type="date" id="logDate" onchange="loadDay()">
+    </div>
+
+    <div class="electric-card">
+        <div class="stat-row">
+            <div>
+                <div class="stat-val" id="totalCals">0</div>
+                <div class="stat-label">Calories (Goal: 3342)</div>
+            </div>
+            <div style="text-align: right;">
+                <div class="stat-val" style="color: #ff005e;" id="totalPro">0g</div>
+                <div class="stat-label">Protein (Goal: 110g)</div>
+            </div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="calProgress"></div></div>
+    </div>
+
+    <div class="card">
+        <h3>HYDRATION</h3>
+        <div class="water-row">
+            <button class="c-btn" onclick="adj('water', -1)">-</button>
+            <span class="water-disp" id="disp_water">0 L</span>
+            <button class="c-btn" onclick="adj('water', 1)">+</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>DAILY FUEL</h3>
+        <div class="row">
+            <div style="flex:1;">
+                <label>Bru Coffee</label>
+                <select id="bruCoffee" onchange="calc()">
+                    <option value="0">None</option>
+                    <option value="1">1 Cup</option>
+                    <option value="2">2 Cups</option>
+                </select>
+            </div>
+            <div style="flex:1;">
+                <label>Robusta Shake</label>
+                <select id="shakeCount" onchange="calc()">
+                    <option value="0">None</option>
+                    <option value="1">1 Shake</option>
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div style="flex:1;">
+                <label>Almonds (Qty)</label>
+                <input type="number" id="almondCount" placeholder="Qty" oninput="calc()">
+            </div>
+            <div style="flex:1;">
+                <label>Dates (Qty)</label>
+                <input type="number" id="dateCount" placeholder="Qty" oninput="calc()">
+            </div>
+        </div>
+        <label>Creatine</label>
+        <select id="creatine" onchange="calc()"><option value="0">No</option><option value="1">Yes (5g)</option></select>
+    </div>
+
+    <div class="card">
+        <h3>BREAKFAST</h3>
+        <label>Main Dish</label>
+        <div class="row">
+            <select id="breakFood" onchange="calc()"></select> <input type="number" id="breakQty" class="qty-input" value="1" oninput="calc()">
+        </div>
+
+        <label>Curry / Side</label>
+        <select id="breakCurry" onchange="calc()"></select> <div class="row">
+            <div style="flex:1;">
+                <label>Eggs</label>
+                <div class="counter-box">
+                    <button class="c-btn" onclick="adj('breakEgg', -1)">-</button>
+                    <span class="c-val" id="disp_breakEgg">0</span>
+                    <button class="c-btn" onclick="adj('breakEgg', 1)">+</button>
+                </div>
+            </div>
+            <div style="flex:1;">
+                <label>Banana</label>
+                <div class="counter-box">
+                    <button class="c-btn" onclick="adj('breakBan', -1)">-</button>
+                    <span class="c-val" id="disp_breakBan">0</span>
+                    <button class="c-btn" onclick="adj('breakBan', 1)">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>LUNCH</h3>
+        <label>Rice Base</label>
+        <div class="row">
+            <select id="lunchFood" onchange="calc()">
+                <option value="0,0">-- Select --</option>
+                <option value="200,2.7">White Rice (1 Cup)</option>
+                <option value="215,4.5">Brown / Matta Rice (1 Cup)</option>
+                <option value="300,5">Fried Rice (1 Cup)</option>
+                <option value="250,5">Biryani Rice (1 Cup)</option>
+            </select>
+            <input type="number" id="lunchQty" class="qty-input" value="1.5" oninput="calc()">
+        </div>
+
+        <label>Main Curry</label>
+        <select id="lunchCurry" onchange="calc()">
+            <option value="0,0">-- None --</option>
+            <option value="250,10">Kadala Curry</option>
+            <option value="180,10">Parippu (Dal)</option>
+            <option value="270,3">Moru Curry</option>
+            <option value="120,4">Sambar</option>
+            <option value="560,22.5">Paneer Butter Masala</option>
+            <option value="250,14">Egg Curry (Gravy)</option>
+            <option value="200,10">Fish Curry</option>
+            <option value="240,20">Chicken Curry</option>
+        </select>
+
+        <label>Mezhukkupuratti / Fry (Oil Base)</label>
+        <select id="lunchFry" onchange="calc()">
+            <option value="0,0">-- None --</option>
+            <option value="200,3">Potato Fry</option>
+            <option value="180,3">Yam (Chena) Fry</option>
+            <option value="180,3">Raw Banana (Vazhakka)</option>
+            <option value="160,2">Ivy Gourd (Kovakka)</option>
+            <option value="160,2">Bitter Gourd (Pavakka)</option>
+            <option value="150,2">Okra (Vendakka)</option>
+            <option value="190,4">Aviyal (Mixed Veg)</option>
+        </select>
+
+        <label>Thoran (Coconut Base)</label>
+        <select id="lunchThoran" onchange="calc()">
+            <option value="0,0">-- None --</option>
+            <option value="100,2">Cabbage Thoran</option>
+            <option value="110,2">Beans Thoran</option>
+            <option value="120,2">Carrot Thoran</option>
+            <option value="120,2">Beetroot Thoran</option>
+            <option value="90,3">Spinach (Cheera)</option>
+        </select>
+
+        <label>Power Beans (High Protein)</label>
+        <select id="lunchBeans" onchange="calc()">
+            <option value="0,0">-- None --</option>
+            <option value="160,9">Red Cow Peas (Vanpayar)</option>
+            <option value="150,10">Green Gram (Cherupayar)</option>
+            <option value="180,12">Black Chana Roast</option>
+        </select>
+
+        <label>Condiments</label>
+        <select id="lunchCond" onchange="calc()">
+            <option value="0,0">-- None --</option>
+            <option value="30,0">Pickle (Mango/Lime)</option>
+            <option value="50,1">Chammanthi (Thenga)</option>
+            <option value="20,0">Chammanthi (Mulaku)</option>
+        </select>
+
+        <label>Eggs</label>
+        <div class="counter-box">
+            <button class="c-btn" onclick="adj('lunchEgg', -1)">-</button>
+            <span class="c-val" id="disp_lunchEgg">0</span>
+            <button class="c-btn" onclick="adj('lunchEgg', 1)">+</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>DINNER</h3>
+        <label>Main Dish</label>
+        <div class="row">
+            <select id="dinnerFood" onchange="calc()"></select> <input type="number" id="dinnerQty" class="qty-input" value="4" oninput="calc()">
+        </div>
+
+        <label>Curry / Side</label>
+        <select id="dinnerCurry" onchange="calc()"></select> <div class="row">
+            <div style="flex:1;">
+                <label>Eggs</label>
+                <div class="counter-box">
+                    <button class="c-btn" onclick="adj('dinnerEgg', -1)">-</button>
+                    <span class="c-val" id="disp_dinnerEgg">0</span>
+                    <button class="c-btn" onclick="adj('dinnerEgg', 1)">+</button>
+                </div>
+            </div>
+            <div style="flex:1;">
+                <label>Banana</label>
+                <div class="counter-box">
+                    <button class="c-btn" onclick="adj('dinnerBan', -1)">-</button>
+                    <span class="c-val" id="disp_dinnerBan">0</span>
+                    <button class="c-btn" onclick="adj('dinnerBan', 1)">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="border: 1px solid #444;">
+        <h3>EXTRAS</h3>
+        <div class="row">
+            <input type="number" id="extraCals" placeholder="Cals" oninput="calc()">
+            <input type="number" id="extraPro" placeholder="Protein" oninput="calc()">
+        </div>
+    </div>
+
+    <div style="text-align: center; color: #555; margin-top: 30px;" id="statusMsg">Ready</div>
+
+<script>
+    // === DATA CONFIG ===
+    // Combined Menu for Breakfast & Dinner
+    const mainDishes = [
+        { name: "-- Select --", val: "0,0" },
+        { name: "Puttu (1 Kutti)", val: "350,8" },
+        { name: "Appam (1 pc)", val: "70,1" },
+        { name: "Idli (1 pc)", val: "50,2" },
+        { name: "Dosa (Plain)", val: "80,1.5" },
+        { name: "Masala Dosa", val: "250,6" },
+        { name: "Ghee Roast Dosa", val: "220,4" },
+        { name: "Onion Dosa", val: "150,3" },
+        { name: "Chapati (1 pc)", val: "100,2.5" },
+        { name: "Kerala Porotta", val: "280,4" },
+        { name: "Idiyappam (1 pc)", val: "90,1" },
+        { name: "Kozhukatta (1 pc)", val: "150,2" },
+        { name: "Upma (1 Cup)", val: "250,5" }
+    ];
+
+    const sideDishes = [
+        { name: "-- None --", val: "0,0" },
+        { name: "Kadala Curry", val: "250,10" },
+        { name: "Sambar", val: "120,4" },
+        { name: "Veg Stew", val: "250,3" },
+        { name: "Coconut Chutney", val: "150,1" },
+        { name: "Tomato Chutney", val: "80,1" },
+        { name: "Green Peas Masala", val: "180,6" },
+        { name: "Egg Curry (Gravy)", val: "250,14" },
+        { name: "Tomato Curry", val: "140,2" },
+        { name: "Onion Curry", val: "140,2" },
+        { name: "Paneer Butter Masala", val: "560,22.5" },
+        { name: "Steamed Plantain", val: "120,1" },
+        { name: "Chicken Curry", val: "240,20" }
+    ];
+
+    // Populate Dropdowns on Load
+    function populate(id, list) {
+        const sel = document.getElementById(id);
+        list.forEach(item => {
+            let opt = document.createElement('option');
+            opt.value = item.val;
+            opt.textContent = item.name;
+            sel.appendChild(opt);
+        });
+    }
+
+    // STATE
+    let counts = { water:0, breakEgg:0, breakBan:0, lunchEgg:0, dinnerEgg:0, dinnerBan:0 };
+    
+    // IDs to Save
+    const inputIds = ['bruCoffee', 'shakeCount', 'creatine', 'almondCount', 'dateCount', 
+                      'breakFood', 'breakQty', 'breakCurry', 
+                      'lunchFood', 'lunchQty', 'lunchCurry', 'lunchFry', 'lunchThoran', 'lunchBeans', 'lunchCond',
+                      'dinnerFood', 'dinnerQty', 'dinnerCurry', 
+                      'extraCals', 'extraPro'];
+
+    window.onload = function() {
+        populate('breakFood', mainDishes);
+        populate('dinnerFood', mainDishes);
+        populate('breakCurry', sideDishes);
+        populate('dinnerCurry', sideDishes);
+
+        document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
+        loadDay();
+    };
+
+    function adj(key, val) {
+        counts[key] += val;
+        if(counts[key] < 0) counts[key] = 0;
+        document.getElementById('disp_' + key).innerText = counts[key] + (key === 'water' ? ' L' : '');
+        calc();
+    }
+
+    function calc() {
+        let cal = 0, pro = 0;
+
+        // 1. Counters
+        cal += (counts.breakEgg + counts.lunchEgg + counts.dinnerEgg) * 70;
+        pro += (counts.breakEgg + counts.lunchEgg + counts.dinnerEgg) * 6;
+        cal += (counts.breakBan + counts.dinnerBan) * 105;
+        pro += (counts.breakBan + counts.dinnerBan) * 1;
+
+        // 2. Simple Inputs
+        cal += (document.getElementById('bruCoffee').value * 198);
+        pro += (document.getElementById('bruCoffee').value * 8);
+        
+        cal += (document.getElementById('shakeCount').value * 790);
+        pro += (document.getElementById('shakeCount').value * 34.2);
+
+        let alm = document.getElementById('almondCount').value || 0;
+        cal += alm * 7; pro += alm * 0.25;
+
+        let dat = document.getElementById('dateCount').value || 0;
+        cal += dat * 25; pro += dat * 0.2;
+
+        // 3. Dropdowns (Value split by comma)
+        const drops = ['breakFood', 'breakCurry', 'lunchFood', 'lunchCurry', 'lunchFry', 'lunchThoran', 'lunchBeans', 'lunchCond', 'dinnerFood', 'dinnerCurry'];
+        
+        drops.forEach(id => {
+            let val = document.getElementById(id).value.split(',');
+            let qty = 1;
+            // Check if there is a specific Qty input for this field
+            if(id === 'breakFood') qty = document.getElementById('breakQty').value || 0;
+            if(id === 'lunchFood') qty = document.getElementById('lunchQty').value || 0;
+            if(id === 'dinnerFood') qty = document.getElementById('dinnerQty').value || 0;
+
+            cal += parseFloat(val[0]) * qty;
+            pro += parseFloat(val[1]) * qty;
+        });
+
+        // 4. Extras
+        cal += parseFloat(document.getElementById('extraCals').value) || 0;
+        pro += parseFloat(document.getElementById('extraPro').value) || 0;
+
+        // UI Update
+        document.getElementById('totalCals').innerText = Math.round(cal);
+        document.getElementById('totalPro').innerText = Math.round(pro) + 'g';
+        
+        let pct = (cal / 3342) * 100;
+        if(pct > 100) pct = 100;
+        document.getElementById('calProgress').style.width = pct + '%';
+
+        saveDay();
+    }
+
+    function saveDay() {
+        const date = document.getElementById('logDate').value;
+        const data = { counts: counts, inputs: {} };
+        inputIds.forEach(id => data.inputs[id] = document.getElementById(id).value);
+        localStorage.setItem('kerala_pro_' + date, JSON.stringify(data));
+        document.getElementById('statusMsg').innerText = "Autosaved";
+    }
+
+    function loadDay() {
+        const date = document.getElementById('logDate').value;
+        const saved = localStorage.getItem('kerala_pro_' + date);
+        
+        if(saved) {
+            const data = JSON.parse(saved);
+            counts = data.counts || counts;
+            
+            // Restore Counters
+            for(let key in counts) {
+                let el = document.getElementById('disp_' + key);
+                if(el) el.innerText = counts[key] + (key === 'water' ? ' L' : '');
+            }
+
+            // Restore Inputs
+            inputIds.forEach(id => {
+                if(data.inputs[id] !== undefined) document.getElementById(id).value = data.inputs[id];
+            });
+            document.getElementById('statusMsg').innerText = "Loaded Data";
+        } else {
+            // Reset
+            counts = { water:0, breakEgg:0, breakBan:0, lunchEgg:0, dinnerEgg:0, dinnerBan:0 };
+            document.querySelectorAll('.c-val').forEach(e => e.innerText = "0");
+            document.getElementById('disp_water').innerText = "0 L";
+            inputIds.forEach(id => {
+                if(id.includes('Qty')) {
+                    if(id.includes('break')) document.getElementById(id).value = 1;
+                    if(id.includes('lunch')) document.getElementById(id).value = 1.5;
+                    if(id.includes('dinner')) document.getElementById(id).value = 4;
+                } else if(id.includes('Food') || id.includes('Curry') || id.includes('Fry') || id.includes('Thoran') || id.includes('Cond')) {
+                    document.getElementById(id).selectedIndex = 0; // Select first option
+                } else {
+                    document.getElementById(id).value = "";
+                }
+            });
+            document.getElementById('statusMsg').innerText = "New Entry";
+        }
+        calc();
+    }
+</script>
+
+</body>
+</html>
